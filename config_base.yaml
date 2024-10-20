@@ -1,0 +1,47 @@
+Name: "Puru"
+
+###### Dataset -----------------------------------------------------------------
+norm: True
+token_type: "char" # [char, 1k, 10k, 50k]
+input_dim: 80
+batch_size: 4
+
+###### Encoder Parameters ------------------------------------------
+enc_dropout: 0.2
+enc_num_layers: 2
+enc_num_heads: 8
+
+###### Decoder Parameters ------------------------------------------
+dec_dropout: 0.1
+dec_num_layers: 2
+dec_num_heads: 8
+
+###### Network Parameters ------------------------------------------------------
+d_model: 512
+d_ff: 2048
+
+###### Training Parameters ------------------------------------------------------
+learning_rate: 5E-4
+optimizer: "AdamW"
+momentum: 0.0
+nesterov: True
+scheduler: "CosineAnnealing"
+factor: 0.2
+patience: 4
+epochs: 60
+
+###### SpecAugment ---------------------------------------------------------------
+specaug: specaug
+specaug_conf:
+  apply_time_warp: true
+  time_warp_window: 5
+  time_warp_mode: bicubic
+  apply_freq_mask: true
+  freq_mask_width_range: 30
+  num_freq_mask: 2
+  apply_time_mask: true
+  time_mask_width_range: 40
+  num_time_mask: 2
+
+###### Normalization ---------------------------------------------------------------
+global_mvn: false
