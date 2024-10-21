@@ -123,7 +123,7 @@ if __name__ == "__main__":
         trans_max_seq_length        = config['TRANS_MAX_LEN'],
         mfcc_max_seq_length         = config['MFCC_MAX_LEN'],
         embed_type                  = config['embed_type']
-    )
+    ).to(device)
 
     para = num_parameters(model)
     print("#"*10)

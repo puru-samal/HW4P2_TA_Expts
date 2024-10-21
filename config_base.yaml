@@ -1,12 +1,21 @@
 Name: "Puru"
 
 ###### Dataset -----------------------------------------------------------------
+root: "hw4p2"
+train_partition: "train-clean-100"
+val_partition: "dev-clean"
+test_partition: "test-clean"
+NUM_WORKERS: 0
+subset: 1.0
 norm: True
-token_type: "char" # [char, 1k, 10k, 50k]
+token_type: "1k" # [char, 1k, 10k, 50k]
 input_dim: 80
 batch_size: 4
+MFCC_MAX_LEN: 3260
+TRANS_MAX_LEN: 517
 
 ###### Encoder Parameters ------------------------------------------
+embed_type: "Conv1DMLP" # Available: ['Conv1DMLP', 'ResBlockMLP', 'BiLSTM']
 enc_dropout: 0.2
 enc_num_layers: 2
 enc_num_heads: 8
