@@ -11,8 +11,6 @@ norm: True
 token_type: "1k" # [char, 1k, 10k, 50k]
 input_dim: 80
 batch_size: 4
-MFCC_MAX_LEN: 3260
-TRANS_MAX_LEN: 517
 
 ###### Encoder Parameters ------------------------------------------
 embed_type: "Conv1DMLP" # Available: ['Conv1DMLP', 'ResBlockMLP', 'BiLSTM']

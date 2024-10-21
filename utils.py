@@ -44,6 +44,31 @@ def log_data_stats(logger, config, train_dataset, train_loader, val_loader, test
         break
     return padded_input, padded_target, input_lengths, target_lengths
 
+
+def verify_dataset(dataloader, partition):
+    print("Loaded Path: ", partition)
+
+    max_len_mfcc = 0
+    max_len_t    = 0  # To track the maximum length of transcripts
+
+    # Iterate through the dataloader
+    for batch in tqdm(dataloader, desc=f"Verifying {partition} Dataset"):
+        x_pad, y_shifted_pad, y_golden_pad, x_len, y_len = batch
+
+        len_x = x_pad.shape[1]
+        if len_x > max_len_mfcc:
+            max_len_mfcc = len_x
+
+        # Update the maximum transcript length
+        # transcript length is dim 1 of y_shifted_pad
+        len_y = y_shifted_pad.shape[1]
+        if len_y > max_len_t:
+            max_len_t = len_y
+
+    print(f"Maximum MFCC Length in Dataset: {max_len_mfcc}\n")
+    print(f"Maximum Transcript Length in Dataset: {max_len_t}\n")
+    return max_len_mfcc, max_len_t
+
 def save_model(model, optimizer, scheduler, metric, epoch, path):
     torch.save(
         {"model_state_dict"         : model.state_dict(),
@@ -74,7 +99,7 @@ def num_parameters(model):
     return total_params / 1E6
 
 def indices_to_chars(indices, tokenizer):
-    tokens = tokenizer.decode(indices).cpu.numpy()
+    tokens = tokenizer.decode(indices)
     return tokens
 
 

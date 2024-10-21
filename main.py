@@ -8,6 +8,7 @@ from torchsummaryX import summary
 import gc
 import argparse
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ['TF_ENABLE_ONEDNN_OPTS']  = 0
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device: ", device)
 
@@ -103,6 +104,18 @@ if __name__ == "__main__":
         print(f"Transcript Golden: {transcript}\n")
         break
     print('')
+
+    print("\n\nVerifying Train Dataset")
+    max_train_mfcc, max_train_transcript = verify_dataset(train_loader, config['train_partition'])
+    max_val_mfcc, max_val_transcript     =  verify_dataset(val_loader, config['train_partition'])
+    max_test_mfcc, max_test_transcript   = verify_dataset(test_loader, config['train_partition'])
+
+    MAX_MFCC_LEN  = max(max_train_mfcc, max_val_mfcc, max_test_mfcc)
+    MAX_TRANS_LEN = max(max_train_transcript, max_val_transcript, max_test_transcript)
+    print(f"Maximum MFCC Length in Entire Dataset: {MAX_MFCC_LEN}")
+    print(f"Maximum Transcript Length in Entire Dataset: {MAX_TRANS_LEN}")
+    print('')
+
     #### ----------------------------------------------------------------------------------------------------------------------
 
     #### Model ----------------------------------------------------------------------------------------------------------------
@@ -120,8 +133,8 @@ if __name__ == "__main__":
         pad_token                   = tokenizer.PAD_TOKEN,
         enc_dropout                 = config['enc_dropout'],
         dec_dropout                 = config['dec_dropout'],
-        trans_max_seq_length        = config['TRANS_MAX_LEN'],
-        mfcc_max_seq_length         = config['MFCC_MAX_LEN'],
+        trans_max_seq_length        = MAX_TRANS_LEN,
+        mfcc_max_seq_length         = MAX_MFCC_LEN,
         embed_type                  = config['embed_type']
     ).to(device)
 
