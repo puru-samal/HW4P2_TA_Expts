@@ -50,7 +50,7 @@ if __name__ == "__main__":
     #### Data -----------------------------------------------------------------------------------------------------------------
     train_dataset   = SpeechDataset(root=config['root'], partition=config['train_partition'], config=config, tokenizer=tokenizer, isTrainPartition=True,  subset=config['subset'])
     val_dataset     = SpeechDataset(root=config['root'], partition=config['val_partition'],   config=config, tokenizer=tokenizer, isTrainPartition=False, subset=config['subset'])
-    test_dataset    = SpeechDataset(root=config['root'], partition=config['val_partition'],   config=config, tokenizer=tokenizer, isTrainPartition=False, subset=config['subset'])
+    test_dataset    = SpeechDataset(root=config['root'], partition=config['test_partition'],   config=config, tokenizer=tokenizer, isTrainPartition=False, subset=config['subset'])
 
     train_loader    = torch.utils.data.DataLoader(
         dataset     = train_dataset,
@@ -106,8 +106,8 @@ if __name__ == "__main__":
 
     print("\n\nVerifying Train Dataset")
     max_train_mfcc, max_train_transcript = verify_dataset(train_loader, config['train_partition'])
-    max_val_mfcc, max_val_transcript     =  verify_dataset(val_loader, config['train_partition'])
-    max_test_mfcc, max_test_transcript   = verify_dataset(test_loader, config['train_partition'])
+    max_val_mfcc, max_val_transcript     =  verify_dataset(val_loader, config['val_partition'])
+    max_test_mfcc, max_test_transcript   = verify_dataset(test_loader, config['test_partition'])
 
     MAX_MFCC_LEN  = max(max_train_mfcc, max_val_mfcc, max_test_mfcc)
     MAX_TRANS_LEN = max(max_train_transcript, max_val_transcript, max_test_transcript)
