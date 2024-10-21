@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
     para = num_parameters(model)
     print("#"*10)
-    print(f"Model Parameters:\n {para}")
+    print(f"Model Parameters:\n {para}M")
     print("#"*10)
     print('')
     #### ----------------------------------------------------------------------------------------------------------------------
