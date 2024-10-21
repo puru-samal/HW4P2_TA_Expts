@@ -6,7 +6,7 @@
 - Feel free to experiment with more embeddings. To add your own embedding:
 
   - Add your module to `embeddings.py`
-  - Modify the Literal `embed_type` argument and add a case for your embedding in 'encoder.py'.
+  - Modify the Literal `embed_type` argument and add a case for your embedding in `encoder.py`.
   - `Note`: Restrict yourself to simple embeddings. Input will be of shape `B x T x input_dim` and output should be `B x T x d_model`
 
 - Tested on: Google Colab w/ 0.1 data subset over 2 epochs
