@@ -18,4 +18,4 @@
 # TODO
 
 - Support for pre-training LM before joint training
-- Add more decoding strategies (currently only greesdy is supported)
+- Add more decoding strategies (currently only greedy is supported)
