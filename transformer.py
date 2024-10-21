@@ -18,7 +18,7 @@ class Transformer(torch.nn.Module):
 
     def forward(self, padded_input, input_lengths, padded_target, target_lengths):
         # passing through Encoder
-        encoder_output = self.encoder(padded_input)
+        encoder_output = self.encoder(padded_input, input_lengths)
         # print("encoder", encoder_output[0])
 
         # passing Encoder output and Attention masks through Decoder
@@ -28,7 +28,7 @@ class Transformer(torch.nn.Module):
 
     def recognize(self, inp, inp_len):
         """ sequence-to-sequence greedy search -- decoding one utterance at a time """
-        encoder_outputs  = self.encoder(inp)
+        encoder_outputs  = self.encoder(inp, inp_len)
         out = self.decoder.recognize_greedy_search(encoder_outputs, inp_len)
 
         return out

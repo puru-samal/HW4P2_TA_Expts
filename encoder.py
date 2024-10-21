@@ -77,9 +77,13 @@ class Encoder(nn.Module):
         # Final LayerNorm
         self.after_norm = nn.LayerNorm(d_model, eps=1e-12)
 
-    def forward(self, x):
+    def forward(self, x, x_len):
         # Apply embedding
-        x = self.embed(x)
+
+        if self.embed_type == 'BiLSTM':
+            x = self.embed(x, x_len)
+        else:
+            x = self.embed(x)
         # print("embed", x[0])
         # print("embed", x.shape)
 

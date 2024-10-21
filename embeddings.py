@@ -1,5 +1,6 @@
 
 import torch.nn as nn
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 '''
 Feel free to add more embeddings. Only restriction is that they must be simple (Max 2 layers BiLSTM or small simple CNN-MLP combos)s
@@ -17,7 +18,7 @@ class BiLSTMEmbedding(nn.Module):
                 input_dim, output_dim // 2, num_layers=2, batch_first=True, bidirectional=True, dropout=dropout
             )
 
-    def forward(self, x):
+    def forward(self, x,  x_len):
         """
         Args:
             x: Input tensor (batch_size, seq_len, input_dim)
@@ -25,9 +26,16 @@ class BiLSTMEmbedding(nn.Module):
             Output tensor (batch_size, seq_len, output_dim)
         """
         # BiLSTM expects (batch_size, seq_len, input_dim)
-        output, _ = self.bilstm(x)  # Output: (batch_size, seq_len, output_dim)
-        return output
+        # Pack the padded sequence to avoid computing over padded tokens
+        packed_input = pack_padded_sequence(x, x_len.cpu(), batch_first=True, enforce_sorted=False)
 
+        # Pass through the BiLSTM
+        packed_output, _ = self.bilstm(packed_input)
+
+        # Unpack the sequence to restore the original padded shape
+        output, _ = pad_packed_sequence(packed_output, batch_first=True)
+
+        return output
 
 class Conv1DMLPEmbedding(nn.Module):
     def __init__(self, input_dim, output_dim, dropout):
