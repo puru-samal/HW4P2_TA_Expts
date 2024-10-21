@@ -13,7 +13,7 @@
 
 # Usage
 
-1. Download and follow the instructions in `expt_runner.ipynb`
+1. Download and follow the instructions in [`expt_runner.ipynb`](https://colab.research.google.com/drive/1D9NFwKycDLhOpbH15bTvl4tyl30-EDSj?usp=sharing)
 
 # TODO
 
