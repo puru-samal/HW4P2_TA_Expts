@@ -147,7 +147,7 @@ def train_model(model, train_loader, loss_func, optimizer, scaler, pad_token, de
             # passing the minibatch through the model
             raw_predictions, attention_weights = model(inputs, inputs_lengths, targets_shifted, targets_lengths)
 
-            padding_mask = torch.logical_not(torch.eq(targets_shifted, pad_token)).to(inputs.dtype)
+            padding_mask = torch.logical_not(torch.eq(targets_shifted, pad_token))
 
             # cast the mask
             loss = loss_func(raw_predictions.transpose(1,2), targets_golden)*padding_mask
