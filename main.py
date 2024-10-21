@@ -8,7 +8,6 @@ from torchsummaryX import summary
 import gc
 import argparse
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-os.environ['TF_ENABLE_ONEDNN_OPTS']  = 0
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device: ", device)
 
