@@ -71,7 +71,7 @@ class SpeechDataset(torch.utils.data.Dataset):
 
       # Apply global mean and variance normalization if enabled
       if self.config["global_mvn"] and self.global_mean is not None and self.global_std is not None:
-          fbank = (fbank - self.global_mean) / (self.global_std + 1e-8)
+          fbank = (fbank - self.global_mean.unsqueeze(1)) / (self.global_std.unsqueeze(1) + 1e-8)
 
       return fbank, shifted_transcript, golden_transcript
 
