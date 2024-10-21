@@ -104,7 +104,7 @@ def indices_to_chars(indices, tokenizer):
 
 
 ''' utility function for Levenshtein Distantce quantification '''
-def calc_edit_distance(predictions, y, y_len, tokenizer, print_example=False):
+def calc_edit_distance(predictions, y, y_len, tokenizer, calc_lev=False, print_example=False):
 
     dist = 0.0
     batch_size, seq_len = predictions.shape
@@ -113,16 +113,18 @@ def calc_edit_distance(predictions, y, y_len, tokenizer, print_example=False):
         y_string = indices_to_chars(y[batch_idx, 0 : y_len[batch_idx]], tokenizer)
         pred_string = indices_to_chars(predictions[batch_idx], tokenizer)
 
-        #curr_dist   = Levenshtein.distance(pred_string, y_string)
-        #dist += curr_dist
-
-    #print(f"current distance: {curr_dist}")
+        if calc_lev:
+            curr_dist   = Levenshtein.distance(pred_string, y_string)
+            dist += curr_dist
+    
+    if calc_lev:
+        print(f"current distance: {curr_dist}")
     if print_example:
         print("\nGround Truth : ", y_string)
         print("Prediction   : ", pred_string)
 
     dist /= batch_size
-    return dist
+    return dist, y_string, pred_string
 
 
 def train_model(model, train_loader, loss_func, optimizer, scaler, pad_token, device):
@@ -180,14 +182,14 @@ def train_model(model, train_loader, loss_func, optimizer, scaler, pad_token, de
     return running_loss, running_perplexity, attention_weights
 
 
-def validate_fast(model, dataloader, tokenizer, device):
+def validate_fast(model, dataloader, tokenizer, device, calc_lev=False):
     model.eval()
 
     # progress bar
     batch_bar = tqdm(total=len(dataloader), dynamic_ncols=True, leave=False, position=0, desc="Val", ncols=5)
 
     running_distance = 0.0
-
+    json_output = {}
     for i, (inputs, targets_shifted, targets_golden, inputs_lengths, targets_lengths) in enumerate(dataloader):
 
         inputs  = inputs.to(device)
@@ -198,7 +200,12 @@ def validate_fast(model, dataloader, tokenizer, device):
 
         # calculating Levenshtein Distance
         # @NOTE: modify the print_example to print more or less validation examples
-        running_distance += calc_edit_distance(greedy_predictions, targets_golden, targets_lengths, tokenizer, print_example=True)
+        dist, y_string, pred_string = calc_edit_distance(greedy_predictions, targets_golden, targets_lengths, tokenizer, print_example=False, calc_lev=calc_lev)
+        running_distance += dist
+        json_output[i] = {
+            "Input": y_string,
+            "Output": pred_string
+        }
 
         # online validation distance monitoring
         batch_bar.set_postfix(
@@ -215,7 +222,7 @@ def validate_fast(model, dataloader, tokenizer, device):
     batch_bar.close()
     running_distance /= 5
 
-    return running_distance
+    return running_distance, json_output
 
 def validate_full(model, dataloader, tokenizer, device):
     model.eval()

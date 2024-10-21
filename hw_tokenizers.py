@@ -41,7 +41,11 @@ class CharTokenizer():
         return e
     
     def decode(self, data:List[int]) -> str:
-        return ''.join([self.inv_vocab.get(j) for j in data])
+        try:
+            return ''.join([self.inv_vocab.get(j) for j in data])
+        except:
+            data = data.cpu().tolist()
+            return ''.join([self.inv_vocab.get(j) for j in data])
 
 
 

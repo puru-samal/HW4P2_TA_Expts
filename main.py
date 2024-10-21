@@ -4,9 +4,9 @@ from hw_tokenizers import *
 import yaml
 import os
 from transformer import *
-from torchsummaryX import summary
-import gc
+import json
 import argparse
+import gc
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device: ", device)
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     print(f"Maximum MFCC Length in Entire Dataset: {MAX_MFCC_LEN}")
     print(f"Maximum Transcript Length in Entire Dataset: {MAX_TRANS_LEN}")
     print('')
-
+    gc.collect()
     #### ----------------------------------------------------------------------------------------------------------------------
 
     #### Model ----------------------------------------------------------------------------------------------------------------
@@ -207,10 +207,13 @@ if __name__ == "__main__":
             epoch + 1, config["epochs"], train_loss, train_perplexity, curr_lr))
 
 
-        levenshtein_distance = validate_fast(model, val_loader, tokenizer, device)
+        levenshtein_distance, json_out = validate_fast(model, val_loader, tokenizer, device, config['calc_lev'])
+
+        with open(f"{epoch+1}_out.json", "w") as f:
+            json.dump(json_out, f, indent=4)
+        
         print("Levenshtein Distance {:.04f}".format(levenshtein_distance))
         attention_keys = list(attention_weights[0].keys())
-
 
 
         attention_weights_decoder   = attention_weights[1][attention_keys[-1]][0].cpu().detach().numpy()

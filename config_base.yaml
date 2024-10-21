@@ -36,6 +36,7 @@ scheduler: "CosineAnnealing"
 factor: 0.2
 patience: 4
 epochs: 60
+calc_lev: true # Turn on Levenshtein distance calculation (SLOW!)
 
 ###### SpecAugment ---------------------------------------------------------------
 specaug: specaug
