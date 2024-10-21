@@ -3,6 +3,9 @@ import torch.nn as nn
 
 '''
 Feel free to add more embeddings. Only restriction is that they must be simple (Max 2 layers BiLSTM or small simple CNN-MLP combos)s
+# Should follow: 
+# in : B x T x input_dim
+# out: B x T x d_model
 '''
 
 class BiLSTMEmbedding(nn.Module):
@@ -74,8 +77,8 @@ class ResBlockMLPEmbedding(nn.Module):
         if stride != 1 or input_dim != output_dim:
             # Adjust input shape to match the output shape with a 1x1 convolution
             self.skip = nn.Sequential(
-                nn.Conv2d(input_dim, output_dim, kernel_size=1, stride=stride),
-                nn.BatchNorm2d(output_dim)
+                nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=stride),
+                nn.BatchNorm1d(output_dim)
             )
 
         self.act = nn.GELU()

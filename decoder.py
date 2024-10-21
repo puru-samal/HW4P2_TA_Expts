@@ -1,8 +1,14 @@
 
 from modules import *
 from masks import *
+import torch
 
-class DecoderLayer(nn.Module):
+'''
+in  : B x T x d_model
+out : B x d_model x vocab_size
+'''
+
+class DecoderLayer(torch.nn.Module):
     def __init__(self, d_model, num_heads, d_ff, dropout=0.1):
         super().__init__()
 
@@ -11,13 +17,13 @@ class DecoderLayer(nn.Module):
         self.mha2       = MultiHeadAttention(n_head=num_heads, d_model=d_model, dropout=dropout)
         self.ffn        = FeedForward(d_model=d_model, d_ff=d_ff, dropout=dropout)
 
-        self.layernorm1 = nn.LayerNorm(d_model)
-        self.layernorm2 = nn.LayerNorm(d_model)
-        self.layernorm3 = nn.LayerNorm(d_model)
+        self.layernorm1 = torch.nn.LayerNorm(d_model)
+        self.layernorm2 = torch.nn.LayerNorm(d_model)
+        self.layernorm3 = torch.nn.LayerNorm(d_model)
 
-        self.dropout1   = nn.Dropout(dropout)
-        self.dropout2   = nn.Dropout(dropout)
-        self.dropout3   = nn.Dropout(dropout)
+        self.dropout1   = torch.nn.Dropout(dropout)
+        self.dropout2   = torch.nn.Dropout(dropout)
+        self.dropout3   = torch.nn.Dropout(dropout)
 
 
     def forward(self, padded_targets, enc_output, enc_input_lengths, dec_enc_attn_mask, pad_mask, slf_attn_mask):

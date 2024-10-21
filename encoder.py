@@ -1,65 +1,68 @@
-from torch.nn import nn
+import torch.nn as nn
 from embeddings import * 
 from modules import *
 from typing import Literal
 
+'''
+in  : B x T x d_model
+out : B x T x d_model
+'''
+
 
 class EncoderLayer(nn.Module):
-    def __init__(self, d_model, num_heads, d_ff, dropout=0.1):
-        super().__init__()
+    def __init__(self, d_model, num_heads, d_ff, dropout):
+        super(EncoderLayer, self).__init__()
 
-        self.mha        = MultiHeadAttention(num_heads, d_model)
-        self.ffn        = FeedForward(d_model, d_ff, dropout)
+        # Multi-head self-attention with relative positional encoding
+        # self.self_attn = RelPositionMultiHeadedAttention(num_heads, d_model, dropout)
+        self.self_attn = MultiHeadedAttention(n_head=num_heads, n_feat=d_model, dropout_rate=dropout)
 
-        self.layernorm1 = nn.LayerNorm(d_model)
-        self.layernorm2 = nn.LayerNorm(d_model)
-        self.layernorm3 = nn.LayerNorm(d_model)
-        self.dropout1   = nn.Dropout(dropout)
-        self.dropout2   = nn.Dropout(dropout)
+        # Two macaron-style feedforward networks
+        self.ffn1 = PositionwiseFeedForward(d_model, d_ff, dropout)
+        self.ffn2 = PositionwiseFeedForward(d_model, d_ff, dropout)
 
+        # Depthwise convolution for local context
+        self.depthwise_conv = nn.Conv1d(d_model, d_model, kernel_size=3, padding=1, groups=d_model)
 
-    def forward(self, inp):
-        # Multi-Head Attention
-        #   (1) perform Multi-Head Attention on x
-        inp = self.layernorm1(inp)
-        attn_output, self_attention_weights = self.mha(inp, inp, inp)
+        # LayerNorms and Dropouts
+        self.norm1 = LayerNorm(d_model)
+        self.norm2 = LayerNorm(d_model)
+        self.norm3 = LayerNorm(d_model)
+        self.norm4 = LayerNorm(d_model)
 
-        # Skip (Residual) Connection
-        #   (1) perform dropout
-        #   (2) add the input as a skip connection
-        res = inp + self.dropout1(attn_output)
+        self.dropout = nn.Dropout(dropout)
 
-        # Layer Normalization
-        #   (1) call layernorm on this resulting value
-        res = self.layernorm2(res)
+    def forward(self, x, pos_emb):
+        # Self-attention with residual connection and normalization
+        # attn_output = self.self_attn(x, x, x,  pos_emb, mask=None)
+        attn_output = self.self_attn(x, x, x, mask=None)
+        x = self.norm1(x + self.dropout(attn_output))
 
-        # Feed Forward Network
-        #   (1) apply feed forward layer
-        #   (2) apply the padding mask  to the output
-        ffn_output = self.ffn(res)
-        ffn_output = self.dropout2(ffn_output)
+        # First FFN with residual connection and normalization
+        ffn_output = self.ffn1(x)
+        x = self.norm2(x + self.dropout(ffn_output))
 
-        # Skip (Residual) Connection
-        #   (1) add the result before LayerNorm and FFN as skip connection
-        x = res + ffn_output
+        # Depthwise convolution with residual connection and normalization
+        conv_output = self.depthwise_conv(x.transpose(1, 2)).transpose(1, 2)
+        x = self.norm3(x + self.dropout(conv_output))
 
-        # Layer Normalization
-        #   (1) call layernorm on this resulting value
-        block_output = self.layernorm3(x)
-        return block_output, self_attention_weights
-    
+        # Second FFN with residual connection and normalization
+        ffn_output = self.ffn2(x)
+        x = self.norm4(x + self.dropout(ffn_output))
+
+        return x
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, num_layers, d_model, num_heads, d_ff, max_len, embed_type:Literal['ConvIDMLP', 'ResBlockBLP', 'BiLSTM']='ConvIDMLP', dropout=0.1):
+    def __init__(self, input_dim, num_layers, d_model, num_heads, d_ff, max_len, embed_type:Literal['Conv1DMLP', 'ResBlockMLP', 'BiLSTM']='Conv1DMLP', dropout=0.1):
         super(Encoder, self).__init__()
 
         # Conv1D + MLP embedding layer
         self.embed_type = embed_type
         
-        if self.embed_type == 'ConvIDMLP':
+        if self.embed_type == 'Conv1DMLP':
             self.embed = Conv1DMLPEmbedding(input_dim, output_dim=d_model, dropout=dropout)
-        elif self.embed_type == 'ResBlockBLP':
+        elif self.embed_type == 'ResBlockMLP':
             self.embed = ResBlockMLPEmbedding(input_dim, output_dim=d_model, dropout=dropout)
         elif self.embed_type == 'BiLSTM':
             self.embed = BiLSTMEmbedding(input_dim, output_dim=d_model, dropout=dropout)

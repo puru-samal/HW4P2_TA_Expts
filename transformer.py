@@ -1,17 +1,20 @@
 from encoder import *
 from decoder import *
 
+
 class Transformer(torch.nn.Module):
     def __init__(self, input_dim, enc_num_layers, dec_num_layers, enc_num_heads, dec_num_heads,
                  d_model, d_ff, target_vocab_size, eos_token, sos_token,
-                 pad_token, dropout=0.1, trans_max_seq_length=550, mfcc_max_seq_length=3260):
+                 pad_token, enc_dropout, dec_dropout, trans_max_seq_length=550, mfcc_max_seq_length=3260, embed_type:Literal['Conv1DMLP', 'ResBlockMLP', 'BiLSTM']='Conv1DMLP'):
 
         super(Transformer, self).__init__()
 
-        self.encoder = Encoder(input_dim=input_dim, num_layers=enc_num_layers, d_model=d_model, num_heads=enc_num_heads, d_ff=d_ff, max_len=mfcc_max_seq_length, dropout=0.1)
+        self.encoder = Encoder(embed_type=embed_type, input_dim=input_dim, d_model=d_model, num_heads=enc_num_heads, 
+                               num_layers=enc_num_layers, d_ff=d_ff, max_len=mfcc_max_seq_length, dropout=enc_dropout)
 
-        self.decoder = Decoder(dec_num_layers, d_model, dec_num_heads, d_ff,
-                               dropout, target_vocab_size, trans_max_seq_length, eos_token, sos_token, pad_token)
+        self.decoder = Decoder(num_layers=dec_num_layers, d_model=d_model, num_heads=dec_num_heads, d_ff=d_ff,
+                               dropout=dec_dropout, target_vocab_size=target_vocab_size, max_seq_length=trans_max_seq_length, 
+                               eos_token=eos_token, sos_token=sos_token, pad_token=pad_token)
 
     def forward(self, padded_input, input_lengths, padded_target, target_lengths):
         # passing through Encoder

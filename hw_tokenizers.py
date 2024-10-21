@@ -66,18 +66,17 @@ class GTokenizer:
         self.UNK_TOKEN  = self.tokenizer.unk_token_id
         self.VOCAB_SIZE = self.tokenizer.vocab_size
 
-        if logger is not None:
-            logger.info(f"[Tokenizer Loaded]: {token_type}")
-            logger.info(f"\tEOS_TOKEN:  {self.EOS_TOKEN}")
-            logger.info(f"\tSOS_TOKEN:  {self.SOS_TOKEN}") 
-            logger.info(f"\tPAD_TOKEN:  {self.PAD_TOKEN}")
-            logger.info(f"\tUNK_TOKEN:  {self.UNK_TOKEN}")
-            logger.info(f"\tVOCAB_SIZE: {self.VOCAB_SIZE}")
-            logger.info("Examples:")
-            logger.info(f"\t[DECODE EOS, SOS, PAD, UNK]           : {self.decode([self.EOS_TOKEN, self.SOS_TOKEN, self.PAD_TOKEN, self.UNK_TOKEN])}")
-            logger.info(f"\t[Tokenize HELLO DEEP LEARNERS]        : {self.tokenize('HELLO DEEP LEARNERS')}")
-            logger.info(f"\t[Encode (tensor) HELLO DEEP LEARNERS] : {self.encode('HELLO DEEP LEARNERS', return_tensors=True)}")
-            logger.info(f"\t[Encode (list)   HELLO DEEP LEARNERS] : {self.encode('HELLO DEEP LEARNERS', return_tensors=False)}")
+        print(f"[Tokenizer Loaded]: {token_type}")
+        print(f"\tEOS_TOKEN:  {self.EOS_TOKEN}")
+        print(f"\tSOS_TOKEN:  {self.SOS_TOKEN}") 
+        print(f"\tPAD_TOKEN:  {self.PAD_TOKEN}")
+        print(f"\tUNK_TOKEN:  {self.UNK_TOKEN}")
+        print(f"\tVOCAB_SIZE: {self.VOCAB_SIZE}")
+        print("Examples:")
+        print(f"\t[DECODE EOS, SOS, PAD, UNK]           : {self.decode([self.EOS_TOKEN, self.SOS_TOKEN, self.PAD_TOKEN, self.UNK_TOKEN])}")
+        print(f"\t[Tokenize HELLO DEEP LEARNERS]        : {self.tokenize('HELLO DEEP LEARNERS')}")
+        print(f"\t[Encode (tensor) HELLO DEEP LEARNERS] : {self.encode('HELLO DEEP LEARNERS', return_tensors=True)}")
+        print(f"\t[Encode (list)   HELLO DEEP LEARNERS] : {self.encode('HELLO DEEP LEARNERS', return_tensors=False)}")
 
 
        

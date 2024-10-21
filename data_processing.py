@@ -17,6 +17,7 @@ class SpeechDataset(torch.utils.data.Dataset):
     self.config           = config
     self.tokenizer = tokenizer
     self.eos_token = tokenizer.EOS_TOKEN
+    self.sos_token = tokenizer.SOS_TOKEN
     self.pad_token = tokenizer.PAD_TOKEN
     
     # paths | files
