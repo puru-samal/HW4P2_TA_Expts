@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
     #### Loss | Optim | Sched -------------------------------------------------------------------------------------------------
     loss_func   = nn.CrossEntropyLoss(ignore_index = tokenizer.PAD_TOKEN)
-    scaler      = torch.cuda.amp.GradScaler()
+    scaler      = torch.amp.GradScaler()
 
     if config["optimizer"] == "SGD":
         # feel free to change any of the initializations you like to fit your needs

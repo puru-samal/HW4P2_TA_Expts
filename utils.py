@@ -117,8 +117,6 @@ def calc_edit_distance(predictions, y, y_len, tokenizer, calc_lev=False, print_e
             curr_dist   = Levenshtein.distance(pred_string, y_string)
             dist += curr_dist
     
-    if calc_lev:
-        print(f"current distance: {curr_dist}")
     if print_example:
         print("\nGround Truth : ", y_string)
         print("Prediction   : ", pred_string)
@@ -145,7 +143,7 @@ def train_model(model, train_loader, loss_func, optimizer, scaler, pad_token, de
         targets_golden  = targets_golden.to(device)
 
 
-        with torch.cuda.amp.autocast():
+        with torch.autocast(device_type='cuda', dtype=torch.float16):
             # passing the minibatch through the model
             raw_predictions, attention_weights = model(inputs, inputs_lengths, targets_shifted, targets_lengths)
 
