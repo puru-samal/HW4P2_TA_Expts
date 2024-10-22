@@ -69,6 +69,7 @@ class Encoder(nn.Module):
 
         # self.pos_encoding = RelPositionalEncoding(d_model, dropout_rate=dropout)
         self.pos_encoding = PositionalEncoding(d_model, max_len=max_len)
+        self.dropout = nn.Dropout(p=dropout)
 
         self.enc_layers = nn.ModuleList(
             [EncoderLayer(d_model, num_heads, d_ff, dropout) for _ in range(num_layers)]
@@ -90,7 +91,8 @@ class Encoder(nn.Module):
         # x, pos_emb = self.pos_encoding.forward(x)
         x = self.pos_encoding(x)
         # print("pos enc", x[0])
-
+        ## Apply Dropout
+        x = self.dropout(x)
         # Pass through encoder layers
         for layer in self.enc_layers:
             # x = layer(x, pos_emb)

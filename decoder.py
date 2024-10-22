@@ -133,6 +133,8 @@ class Decoder(torch.nn.Module):
         ''' TODO '''
         x = self.positional_encoding(x)
 
+        x = self.dropout(x)
+
         # passing through decoder layers
         # @NOTE: store your mha1 and mha2 attention weights inside a dictionary
         # @NOTE: you will want to retrieve these later so store them with a useful name
