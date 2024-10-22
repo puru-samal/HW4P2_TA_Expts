@@ -110,8 +110,16 @@ def calc_edit_distance(predictions, y, y_len, tokenizer, calc_lev=False, print_e
     batch_size, seq_len = predictions.shape
 
     for batch_idx in range(batch_size):
+
+        pad_indices = torch.where(predictions[batch_idx] == tokenizer.PAD_TOKEN)[0]
+        if pad_indices.numel() > 0:
+            lowest_pad_idx = pad_indices.min().item()
+        else:
+            lowest_pad_idx = 0
+        
+        pred_trimmed = predictions[batch_idx, :lowest_pad_idx]
         y_string = indices_to_chars(y[batch_idx, 0 : y_len[batch_idx]], tokenizer)
-        pred_string = indices_to_chars(predictions[batch_idx], tokenizer)
+        pred_string = indices_to_chars(pred_trimmed, tokenizer)
 
         if calc_lev:
             curr_dist   = Levenshtein.distance(pred_string, y_string)
@@ -186,6 +194,7 @@ def validate_fast(model, dataloader, tokenizer, device, calc_lev=False):
     # progress bar
     batch_bar = tqdm(total=len(dataloader), dynamic_ncols=True, leave=False, position=0, desc="Val", ncols=5)
 
+    # Remove the padding tokens from the predictions and targets
     running_distance = 0.0
     json_output = {}
     for i, (inputs, targets_shifted, targets_golden, inputs_lengths, targets_lengths) in enumerate(dataloader):
@@ -195,7 +204,7 @@ def validate_fast(model, dataloader, tokenizer, device, calc_lev=False):
 
         with torch.inference_mode():
             greedy_predictions = model.recognize(inputs, inputs_lengths)
-
+        
         # calculating Levenshtein Distance
         # @NOTE: modify the print_example to print more or less validation examples
         dist, y_string, pred_string = calc_edit_distance(greedy_predictions, targets_golden, targets_lengths, tokenizer, print_example=False, calc_lev=calc_lev)
