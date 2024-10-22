@@ -212,7 +212,7 @@ if __name__ == "__main__":
         with open(f"{epoch+1}_out.json", "w") as f:
             json.dump(json_out, f, indent=4)
         
-        print("Levenshtein Distance: {:.04f}".format(levenshtein_distance))
+        print("Levenshtein Distance : {:.04f}".format(levenshtein_distance))
         attention_keys = list(attention_weights[0].keys())
 
 
