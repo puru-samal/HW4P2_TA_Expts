@@ -191,17 +191,19 @@ class Decoder(torch.nn.Module):
             # appending the token to the sequence
             target_seq = torch.cat([target_seq, next_token], dim=-1)
 
-            # Checking if <EOS> or <PAD> token is generated
+            # Checking if <EOS> token is generated
             eos_mask = next_token.squeeze(-1) == self.EOS_TOKEN
-            pad_mask = next_token.squeeze(-1) == self.PAD_TOKEN
-            finished |= eos_mask | pad_mask  # Mark sequences as finished
+            finished |= eos_mask
 
             # end if all sequences have generated the EOS token
             if finished.all(): break
 
+        # Remove any extra padding and return the target sequence
+        target_seq = target_seq[:, 1:]  # Remove the initial token if needed (i.e., <SOS>)
         # Remove everything after EOS token
-        eos_indices = (target_seq == self.EOS_TOKEN).float().argmax(dim=1)
-        mask = torch.arange(target_seq.size(1), device=target_seq.device)[None, :] < eos_indices[:, None]
-        target_seq = target_seq.masked_fill(~mask, self.PAD_TOKEN)
+        target_seq = target_seq[:, 1:]
+        max_length = target_seq.size(1)
+        target_seq = torch.nn.functional.pad(target_seq,
+            (0, self.max_seq_length - max_length), value=self.PAD_TOKEN)
 
         return target_seq
