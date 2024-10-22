@@ -1,0 +1,22 @@
+{
+    "0": {
+        "Input": "BECAUSE YOU WERE SLEEPING INSTEAD OF CONQUERING THE LOVELY ROSE PRINCESS HAS BECOME A FIDDLE WITHOUT A BOW WHILE POOR SHAGGY SITS THERE A COOING DOVE<|endoftext|>",
+        "Output": "A"
+    },
+    "1": {
+        "Input": "KALIKO HESITATED<|endoftext|>",
+        "Output": "A"
+    },
+    "2": {
+        "Input": "ONLY HIS HEART AND LUNGS WORKED ON AT A STRONG MEASURED RATE<|endoftext|>",
+        "Output": "A"
+    },
+    "3": {
+        "Input": "THE STRENGTH THAT ENABLES SOMEONE IN A TRANCE TO HOLD HIS BODY STIFF AND UNSUPPORTED EXCEPT AT TWO POINTS THE HEAD AND HEELS<|endoftext|>",
+        "Output": "A"
+    },
+    "4": {
+        "Input": "WHEN THEY ENTERED THE STAGE BOX ON THE LEFT THE FIRST ACT WAS WELL UNDER WAY THE SCENE BEING THE INTERIOR OF A CABIN IN THE SOUTH OF IRELAND<|endoftext|>",
+        "Output": "A"
+    }
+}

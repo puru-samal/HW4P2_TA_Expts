@@ -1,12 +1,6 @@
 
-from modules import *
 from masks import *
-import torch
-
-'''
-in  : B x T x d_model
-out : B x d_model x vocab_size
-'''
+from modules import *
 
 class DecoderLayer(torch.nn.Module):
     def __init__(self, d_model, num_heads, d_ff, dropout=0.1):
@@ -81,8 +75,7 @@ class DecoderLayer(torch.nn.Module):
         # return the network output and both attention weights (for mha1 and mha2)
         # @NOTE: returning the self attention weights first
         return ffn_output, mha1_attn_weights, mha2_attn_weights
-
-
+    
 
 class Decoder(torch.nn.Module):
     def __init__(self, num_layers, d_model, num_heads, d_ff, dropout,
@@ -104,8 +97,7 @@ class Decoder(torch.nn.Module):
         )
 
         self.target_embedding       = torch.nn.Embedding(target_vocab_size, d_model)
-        # self.positional_encoding    = PositionalEncoding(d_model=d_model, dropout_rate = dropout,max_len=max_seq_length)
-        self.positional_encoding = PositionalEncoding(d_model=d_model, max_len=max_seq_length)
+        self.positional_encoding    = PositionalEncoding(d_model=d_model, max_len=max_seq_length)
         self.final_linear           = torch.nn.Linear(d_model, target_vocab_size)
         self.dropout                = torch.nn.Dropout(dropout)
 
@@ -133,31 +125,26 @@ class Decoder(torch.nn.Module):
         ''' TODO '''
         x = self.positional_encoding(x)
 
-        x = self.dropout(x)
-
         # passing through decoder layers
         # @NOTE: store your mha1 and mha2 attention weights inside a dictionary
         # @NOTE: you will want to retrieve these later so store them with a useful name
         ''' TODO '''
-        mha1_attn_weights = {}
-        mha2_attn_weights = {}
-        running_attn = {}
+        runnint_att = {}
+        
         for i in range(self.num_layers):
-            x, mha1_attn_weights[i], mha2_attn_weights[i] = self.dec_layers[i](padded_targets=x,
+            x, runnint_att['layer{}_dec_self'.format(i + 1)], runnint_att['layer{}_dec_self'.format(i + 1)] = self.dec_layers[i](padded_targets=x,
                                                                                enc_output=enc_output,
                                                                                enc_input_lengths=enc_input_lengths,
                                                                                dec_enc_attn_mask=dec_enc_attn_mask,
                                                                                pad_mask=pad_mask,
                                                                                slf_attn_mask=look_ahead_mask)
-            running_attn['layer{}_dec_self'.format(i + 1)] = mha1_attn_weights[i] 
-            running_attn['layer{}_dec_self'.format(i + 1)] =  mha2_attn_weights[i]
 
         # linear layer (Final Projection) for next character prediction
         ''' TODO '''
         seq_out = self.final_linear(x)
 
         # return the network output and the dictionary of attention weights
-        return seq_out, running_attn
+        return seq_out, runnint_att
 
 
     def recognize_greedy_search(self, enc_outputs, enc_input_lengths):
@@ -196,15 +183,16 @@ class Decoder(torch.nn.Module):
             # appending the token to the sequence
             target_seq = torch.cat([target_seq, next_token], dim=-1)
 
-            # Checking if <EOS> token is generated
+            # checking if <EOS> token is generated
             eos_mask = next_token.squeeze(-1) == self.EOS_TOKEN
+            # or opration, if both or one of them is true store the value of the finished sequence in finished variable
             finished |= eos_mask
 
             # end if all sequences have generated the EOS token
             if finished.all(): break
 
-        # Remove any extra padding and return the target sequence
-        target_seq = target_seq[:, 1:]  # Remove the initial token if needed (i.e., <SOS>)
+        # remove the initial <SOS> token and pad sequences to the same length
+        target_seq = target_seq[:, 1:]
         max_length = target_seq.size(1)
         target_seq = torch.nn.functional.pad(target_seq,
             (0, self.max_seq_length - max_length), value=self.PAD_TOKEN)

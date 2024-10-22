@@ -1,0 +1,56 @@
+
+Name: "Gabby"
+
+###### Dataset -----------------------------------------------------------------
+root: "hw4p2"
+train_partition: "train-clean-100"
+val_partition: "dev-clean"
+test_partition: "test-clean"
+NUM_WORKERS: 4
+subset: 0.25
+norm: True
+token_type: "char" # [char, 1k, 10k, 20k, 50k, 100k]
+input_dim: 80
+batch_size: 16
+
+###### Encoder Parameters ------------------------------------------
+embed_type: "Conv1DMLP" # Available: ['Conv1DMLP', 'ResBlockMLP', 'BiLSTM' , 'Conv2DMLP']
+enc_dropout: 0.1
+enc_num_layers: 2
+enc_num_heads: 8
+
+###### Decoder Parameters ------------------------------------------
+dec_dropout: 0.1
+dec_num_layers: 2
+dec_num_heads: 8
+
+###### Network Parameters ------------------------------------------------------
+d_model: 512
+d_ff: 2048
+
+###### Training Parameters ------------------------------------------------------
+learning_rate: 5E-4
+optimizer: "AdamW"
+momentum: 0.0
+nesterov: True
+scheduler: "CosineAnnealing"
+factor: 0.2
+patience: 4
+epochs: 80
+calc_lev: true # Turn on Levenshtein distance calculation (SLOW!)
+
+###### SpecAugment ---------------------------------------------------------------
+specaug: specaug
+specaug_conf:
+  apply_time_warp: true
+  time_warp_window: 5
+  time_warp_mode: bicubic
+  apply_freq_mask: true
+  freq_mask_width_range: 30
+  num_freq_mask: 2
+  apply_time_mask: true
+  time_mask_width_range: 40
+  num_time_mask: 2
+
+###### Normalization ---------------------------------------------------------------
+global_mvn: true

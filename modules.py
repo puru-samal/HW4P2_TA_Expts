@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import math
-
+import torch.nn as nn
 class LayerNorm(torch.nn.LayerNorm):
     """Layer normalization module.
 
@@ -72,7 +72,7 @@ class ScaledDotProductAttention(torch.nn.Module):
 class MultiHeadAttention(torch.nn.Module):
     ''' Multi-Head Attention Module '''
 
-    def __init__(self, n_head, d_model, dropout=0.2):
+    def __init__(self, n_head, d_model, dropout=0.1):
         super().__init__()
 
         self.n_head = n_head # Number of attention heads
@@ -81,15 +81,13 @@ class MultiHeadAttention(torch.nn.Module):
 
 
         # Linear layers for projecting the input query, key, and value to multiple heads
-
-
         self.w_qs   = torch.nn.Linear(d_model, n_head * self.d_k)
         self.w_ks   = torch.nn.Linear(d_model, n_head * self.d_k)
         self.w_vs   = torch.nn.Linear(d_model, n_head * self.d_v)
 
-        # torch.nn.init.normal_(self.w_qs.weight, mean=0, std=np.sqrt(2.0 / (d_model + self.d_k)))
-        # torch.nn.init.normal_(self.w_ks.weight, mean=0, std=np.sqrt(2.0 / (d_model + self.d_k)))
-        # torch.nn.init.normal_(self.w_vs.weight, mean=0, std=np.sqrt(2.0 / (d_model + self.d_v)))
+        torch.nn.init.normal_(self.w_qs.weight, mean=0, std=np.sqrt(2.0 / (d_model + self.d_k)))
+        torch.nn.init.normal_(self.w_ks.weight, mean=0, std=np.sqrt(2.0 / (d_model + self.d_k)))
+        torch.nn.init.normal_(self.w_vs.weight, mean=0, std=np.sqrt(2.0 / (d_model + self.d_v)))
 
         # Initialize the weights of the linear layers
         self.attention = ScaledDotProductAttention(
@@ -97,18 +95,18 @@ class MultiHeadAttention(torch.nn.Module):
 
         # Final linear layer to project the concatenated outputs of the attention heads back to the model dimension
         self.fc = torch.nn.Linear(n_head * self.d_v, d_model)
-        # torch.nn.init.normal_(self.fc.weight)
+
+        torch.nn.init.xavier_normal_(self.fc.weight)
 
         self.dropout = torch.nn.Dropout(dropout)
 
     def forward(self, q, k, v, mask=None):
 
         # following key, value, query standard computation
-        d_k, d_v, n_head = self.d_k, self.d_v, self.n_head
-
-        sz_b, len_q, _ = q.size()
-        sz_b, len_k, _ = k.size()
-        sz_b, len_v, _ = v.size()
+        d_k, d_v, n_head    = self.d_k, self.d_v, self.n_head
+        sz_b, len_q, _      = q.size()
+        sz_b, len_k, _      = k.size()
+        sz_b, len_v, _      = v.size()
 
         # Project the input query, key, and value to multiple heads
         q = self.w_qs(q).view(sz_b, len_q, n_head, d_k)
@@ -134,7 +132,6 @@ class MultiHeadAttention(torch.nn.Module):
         output          = self.dropout(self.fc(output))
 
         return output, attn
-
 
 class MultiHeadedAttention(torch.nn.Module):
     """Multi-Head Attention layer.
@@ -289,7 +286,7 @@ class MultiHeadedAttention(torch.nn.Module):
 class PositionalEncoding(torch.nn.Module):
     ''' Position Encoding from Attention Is All You Need Paper '''
 
-    def __init__(self, d_model, max_len=512):
+    def __init__(self, d_model, max_len=5000):
         super().__init__()
 
         # Initialize a tensor to hold the positional encodings
@@ -311,6 +308,7 @@ class PositionalEncoding(torch.nn.Module):
         self.register_buffer("pe", pe)
 
     def forward(self, x):
+
       return x + self.pe[:, :x.size(1)]
 
 
@@ -332,6 +330,7 @@ class FeedForward(torch.nn.Module):
 
          # Apply the second linear layer to project the dimension back to d_model
         x = self.linear_2(x)
+
         return x
     
 class PositionwiseFeedForward(torch.nn.Module):

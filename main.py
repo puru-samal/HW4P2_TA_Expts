@@ -188,7 +188,8 @@ if __name__ == "__main__":
     RESUME_LOGGING = False
     checkpoint_root = os.path.join(os.getcwd(), 'checkpoints')
     os.makedirs(checkpoint_root, exist_ok=True)
-
+    os.makedirs('attention_imgs', exist_ok=True)
+    os.makedirs('out_text', exist_ok=True)
     checkpoint_best_loss_model_filename     = 'checkpoint-best-loss-modelfull.pth'
     checkpoint_last_epoch_filename          = 'checkpoint-epochfull-'
     best_loss_model_path                    = os.path.join(checkpoint_root, checkpoint_best_loss_model_filename)
@@ -209,17 +210,18 @@ if __name__ == "__main__":
 
         levenshtein_distance, json_out = validate_fast(model, val_loader, tokenizer, device, config['calc_lev'])
 
-        with open(f"{epoch+1}_out.json", "w") as f:
+        with open(f"out_text/{epoch+1}_out.json", "w") as f:
             json.dump(json_out, f, indent=4)
         
         print("Levenshtein Distance : {:.04f}".format(levenshtein_distance))
-        attention_keys = list(attention_weights[0].keys())
+        attention_keys = list(attention_weights.keys())
 
-
-        attention_weights_decoder   = attention_weights[1][attention_keys[-1]][0].cpu().detach().numpy()
-        attention_weights_enc       = attention_weights[0][attention_keys[0]][0].cpu().detach().numpy()
-        save_attention_plot(attention_weights_decoder,epoch+1001)
-
+        attention_weights_decoder_self       = attention_weights[attention_keys[0]][0].cpu().detach().numpy()
+        attention_weights_decoder_cross      = attention_weights[attention_keys[-1]][0].cpu().detach().numpy()
+        attention_weights_decoder_cross = (attention_weights_decoder_cross - attention_weights_decoder_cross.min())
+        attention_weights_decoder_self = (attention_weights_decoder_self - attention_weights_decoder_self.min())
+        save_attention_plot(attention_weights_decoder_cross, epoch)
+        save_attention_plot(attention_weights_decoder_self, epoch+100)
         if config["scheduler"] == "ReduceLR":
             scheduler.step(levenshtein_distance)
         else:

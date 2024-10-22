@@ -281,4 +281,8 @@ def save_attention_plot(attention_weights, epoch=0):
     sns.heatmap(attention_weights, cmap="GnBu")  # Create heatmap
 
     # Save the plot to a file. Specify the directory if needed.
-    plt.savefig(f"cross_attention-epoch{epoch}.png")
+    if epoch<100:
+        plt.savefig(f"attention_imgs/cross_attention-epoch{epoch}.png")
+    else :
+   
+        plt.savefig(f"attention_imgs/self_attention-epoch{epoch-100}.png")
