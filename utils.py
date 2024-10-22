@@ -110,14 +110,18 @@ def calc_edit_distance(predictions, y, y_len, tokenizer, calc_lev=False, print_e
     batch_size, seq_len = predictions.shape
 
     for batch_idx in range(batch_size):
-
-        pad_indices = torch.where(predictions[batch_idx] == tokenizer.PAD_TOKEN)[0]
+        
+        # Trim upto the EOS_TOKEN
+        pad_indices = torch.where(predictions[batch_idx] == tokenizer.EOS_TOKEN)[0]
         if pad_indices.numel() > 0:
             lowest_pad_idx = pad_indices.min().item()
         else:
             lowest_pad_idx = 0
+        if lowest_pad_idx == len(predictions[batch_idx]):
+            pred_trimmed = predictions[batch_idx]
+        else:
+            pred_trimmed = predictions[batch_idx, :lowest_pad_idx+1]
         
-        pred_trimmed = predictions[batch_idx, :lowest_pad_idx]
         y_string = indices_to_chars(y[batch_idx, 0 : y_len[batch_idx]], tokenizer)
         pred_string = indices_to_chars(pred_trimmed, tokenizer)
 

@@ -200,8 +200,6 @@ class Decoder(torch.nn.Module):
 
         # Remove any extra padding and return the target sequence
         target_seq = target_seq[:, 1:]  # Remove the initial token if needed (i.e., <SOS>)
-        # Remove everything after EOS token
-        target_seq = target_seq[:, 1:]
         max_length = target_seq.size(1)
         target_seq = torch.nn.functional.pad(target_seq,
             (0, self.max_seq_length - max_length), value=self.PAD_TOKEN)
