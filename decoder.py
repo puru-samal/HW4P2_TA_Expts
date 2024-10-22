@@ -139,6 +139,7 @@ class Decoder(torch.nn.Module):
         ''' TODO '''
         mha1_attn_weights = {}
         mha2_attn_weights = {}
+        running_attn = {}
         for i in range(self.num_layers):
             x, mha1_attn_weights[i], mha2_attn_weights[i] = self.dec_layers[i](padded_targets=x,
                                                                                enc_output=enc_output,
@@ -146,13 +147,15 @@ class Decoder(torch.nn.Module):
                                                                                dec_enc_attn_mask=dec_enc_attn_mask,
                                                                                pad_mask=pad_mask,
                                                                                slf_attn_mask=look_ahead_mask)
+            running_attn['layer{}_dec_self'.format(i + 1)] = mha1_attn_weights[i] 
+            running_attn['layer{}_dec_self'.format(i + 1)] =  mha2_attn_weights[i]
 
         # linear layer (Final Projection) for next character prediction
         ''' TODO '''
         seq_out = self.final_linear(x)
 
         # return the network output and the dictionary of attention weights
-        return seq_out, (mha1_attn_weights, mha2_attn_weights)
+        return seq_out, running_attn
 
 
     def recognize_greedy_search(self, enc_outputs, enc_input_lengths):
