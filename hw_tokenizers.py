@@ -51,7 +51,7 @@ class CharTokenizer():
 
 class GTokenizer:
 
-    def __init__(self, token_type: Literal['1k', '10k', '50k', 'char']='char', logger=None):
+    def __init__(self, token_type: Literal['1k', '10k', '20k', '50k', '100k', 'char']='char', logger=None):
         
         self.token_type = token_type
         self.vocab, self.inv_vocab = None, None
@@ -59,8 +59,12 @@ class GTokenizer:
             self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_1k")
         elif token_type == '10k':
             self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_10k")
+        elif token_type == '20k':
+            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_20k")
         elif token_type  == '50k':
             self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_50k")
+        elif token_type  == '100k':
+            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_100k")
         elif token_type == 'char':
             self.tokenizer = CharTokenizer()
 
@@ -103,5 +107,7 @@ class GTokenizer:
 tokenizer_char = GTokenizer('char', logger=logger)
 tokenizer_1k   = GTokenizer('1k',   logger=logger)
 tokenizer_10k  = GTokenizer('10k',  logger=logger)
+tokenizer_20k  = GTokenizer('20k',  logger=logger)
 tokenizer_50k  = GTokenizer('50k',  logger=logger)
+tokenizer_100k  = GTokenizer('100k',  logger=logger)
 '''

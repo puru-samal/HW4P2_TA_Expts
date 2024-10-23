@@ -116,7 +116,8 @@ def calc_edit_distance(predictions, y, y_len, tokenizer, calc_lev=False, print_e
         if pad_indices.numel() > 0:
             lowest_pad_idx = pad_indices.min().item()
         else:
-            lowest_pad_idx = 0
+            lowest_pad_idx = len(predictions[batch_idx])
+        
         if lowest_pad_idx == len(predictions[batch_idx]):
             pred_trimmed = predictions[batch_idx]
         else:

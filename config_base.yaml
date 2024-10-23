@@ -13,15 +13,15 @@ input_dim: 80
 batch_size: 4
 
 ###### Encoder Parameters ------------------------------------------
-embed_type: "Conv1DMLP" # Available: ['Conv1DMLP', 'ResBlockMLP', 'BiLSTM']
+embed_type: "BiLSTM" # Available: ['Conv1DMLP', 'ResBlockMLP', 'BiLSTM']
 enc_dropout: 0.2
-enc_num_layers: 2
-enc_num_heads: 8
+enc_num_layers: 1
+enc_num_heads: 1
 
 ###### Decoder Parameters ------------------------------------------
 dec_dropout: 0.1
-dec_num_layers: 2
-dec_num_heads: 8
+dec_num_layers: 1
+dec_num_heads: 1
 
 ###### Network Parameters ------------------------------------------------------
 d_model: 512
