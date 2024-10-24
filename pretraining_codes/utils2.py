@@ -184,7 +184,7 @@ def calculate_cer( targets, predictions):
 
     return cer
 
-def train_model(model, train_loader, loss_func, optimizer, scaler, pad_token, device,pre_train):
+def train_model(model, train_loader, loss_func, optimizer, scaler, pad_token, device, pretrain):
 
     model.train()
     batch_bar = tqdm(total=len(train_loader), dynamic_ncols=True, leave=False, position=0, desc="Train")
@@ -204,7 +204,7 @@ def train_model(model, train_loader, loss_func, optimizer, scaler, pad_token, de
 
         with torch.autocast(device_type='cuda', dtype=torch.float16):
             # passing the minibatch through the model
-            raw_predictions, attention_weights = model(inputs, inputs_lengths, targets_shifted, targets_lengths,pretrain)
+            raw_predictions, attention_weights = model(inputs, inputs_lengths, targets_shifted, targets_lengths,pre_train=pretrain)
             
             
 
@@ -345,7 +345,12 @@ def validate_fast(model, dataloader, tokenizer, device, calc_lev=False):
         del inputs, targets_shifted, targets_golden, inputs_lengths, targets_lengths
         torch.cuda.empty_cache()
 
-        if i==4: break      # validating only upon first five batches
+        if i==4: 
+            json_output[i+1] = {
+            "distance": running_distance / 5
+          
+        }
+            break      # validating only upon first five batches
 
     batch_bar.close()
     running_distance /= 5
@@ -404,7 +409,7 @@ def validate_full_lm(model, dataloader, epoch,tokenizer, PAD_TOKEN):
         return [seq[:torch.where(seq == PAD_TOKEN)[0][0].item() if (seq == PAD_TOKEN).any() else len(seq)]
                 for seq in tensor]
 
-    for i, (targets_shifted, targets_golden) in enumerate(dataloader):
+    for i, (inputs, targets_shifted, targets_golden, inputs_lengths, targets_lengths) in enumerate(dataloader):
         targets_shifted = targets_shifted.to(DEVICE)
         targets_golden = targets_golden.to(DEVICE)
 
@@ -415,7 +420,7 @@ def validate_full_lm(model, dataloader, epoch,tokenizer, PAD_TOKEN):
 
         with torch.inference_mode():
             
-            predictions, _, batch_nll, batch_tokens = model.recognize_greedy_lm(batch_size=targets_shifted.size(0), initial_input=prompt, target_seq=targets_shifted)
+            predictions, _, batch_nll, batch_tokens = model.recognize_lm(batch_size=targets_shifted.size(0), initial_input=prompt, target_seq=targets_shifted)
             
         predictions = remove_padding(predictions)
         targets_golden = remove_padding(targets_golden)
@@ -435,6 +440,7 @@ def validate_full_lm(model, dataloader, epoch,tokenizer, PAD_TOKEN):
 
         # Store the predictions and targets for printing
         # First convert the list of char lists to a list of strings
+        print(predictions)
         predictions = [''.join(seq) for seq in predictions]
         targets = [''.join(seq) for seq in targets]
         prompts = [''.join(seq) for seq in prompts]
@@ -481,3 +487,16 @@ def save_attention_plot(attention_weights, epoch=0):
     else :
    
         plt.savefig(f"attention_imgs/self_attention-epoch{epoch-100}.png")
+
+def save_attention_plot_lm(attention_weights, epoch=0):
+    ''' function for saving attention weights plot to a file
+
+        @NOTE: default starter code set to save cross attention
+    '''
+
+    plt.clf()  # Clear the current figure
+    sns.heatmap(attention_weights, cmap="GnBu")  # Create heatmap
+
+  
+   
+    plt.savefig(f"attention_imgs_lm/self_attention-epoch{epoch}.png")
