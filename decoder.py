@@ -7,10 +7,16 @@ class DecoderLayer(torch.nn.Module):
         super().__init__()
 
         # @TODO: fill in the blanks appropriately (given the modules above)
-        self.mha1       = MultiHeadAttention(n_head=num_heads, d_model=d_model, dropout=dropout)
-        self.mha2       = MultiHeadAttention(n_head=num_heads, d_model=d_model, dropout=dropout)
+        self.mha1       = torch.nn.MultiheadAttention(embed_dim=d_model,
+                                                        num_heads=num_heads,
+                                                        dropout=dropout,
+                                                        batch_first=True)
+        self.mha2       = torch.nn.MultiheadAttention(embed_dim=d_model,
+                                                        num_heads=num_heads,
+                                                        dropout=dropout,
+                                                        batch_first=True)
         self.ffn        = FeedForward(d_model=d_model, d_ff=d_ff, dropout=dropout)
-
+        self.pre_norm   = torch.nn.LayerNorm(d_model)
         self.layernorm1 = torch.nn.LayerNorm(d_model)
         self.layernorm2 = torch.nn.LayerNorm(d_model)
         self.layernorm3 = torch.nn.LayerNorm(d_model)
@@ -20,36 +26,57 @@ class DecoderLayer(torch.nn.Module):
         self.dropout3   = torch.nn.Dropout(dropout)
 
 
-    def forward(self, padded_targets, enc_output, enc_input_lengths, dec_enc_attn_mask, pad_mask, slf_attn_mask):
+    def forward(self, padded_targets, enc_output, enc_input_lengths, pad_mask_enc, pad_mask, slf_attn_mask):
 
+
+        
+
+        x = self.pre_norm(padded_targets)
+
+        residual = x
         # Masked Multi-Head Attention
         #   (1) apply MHA with the lookahead mask
         ''' TODO '''
-        mha1_output, mha1_attn_weights = self.mha1(q=padded_targets, k=padded_targets, v=padded_targets, mask=slf_attn_mask)
+        mha1_output, mha1_attn_weights = self.mha1(query=x,
+                                                      key=x,
+                                                      value=x,
+                                                      key_padding_mask=pad_mask,
+                                                      need_weights=True,
+                                                      attn_mask = slf_attn_mask,
+                                                      average_attn_weights=True,
+                                                      is_causal=True)
 
         # Skip (Residual) Connections
         #   (1) perform dropout on padded attention output
         #   (2) add the true outputs (padded_targets) as a skip connection
         ''' TODO '''
-        mha1_output = self.dropout1(mha1_output)
-        mha1_output = mha1_output + padded_targets
+        mha1_output = residual + self.dropout1(mha1_output)
+        
 
         # Layer Normalization
         #   (1) call layernorm on this resulting value
         ''' TODO '''
         mha1_output = self.layernorm1(mha1_output)
 
+        residual = mha1_output
+
         # Masked Multi-Head Attention on Encoder Outputs and Targets
         #   (1) apply MHA with the self-attention mask
         ''' TODO '''
-        mha2_output, mha2_attn_weights = self.mha2(q=mha1_output, k=enc_output, v=enc_output, mask=dec_enc_attn_mask)
+        mha2_output, mha2_attn_weights = self.mha2(query=padded_targets,
+                                                      key=enc_output,
+                                                      value=enc_output,
+                                                      key_padding_mask=pad_mask_enc,
+                                                      need_weights=True,
+                                                      average_attn_weights=True,
+                                                      is_causal=False)
 
         # Skip (Residual) Connections
         #   (1) perform dropout on this second padded attention output
         #   (2) add the output of first MHA block as a skip connection
         ''' TODO '''
-        mha2_output = self.dropout2(mha2_output)
-        mha2_output = mha2_output + mha1_output
+        mha2_output = residual + self.dropout2(mha2_output)
+       
 
         # Layer Normalization
         #   (1) call layernorm on this resulting value
@@ -88,7 +115,7 @@ class Decoder(torch.nn.Module):
 
         self.max_seq_length = max_seq_length
         self.num_layers     = num_layers
-
+        self.num_heads = num_heads
         # use torch.nn.ModuleList() with list comprehension looping through num_layers
         # @NOTE: think about what stays constant per each DecoderLayer (how to call DecoderLayer)
         # @HINT: We've implemented this for you.
@@ -102,25 +129,25 @@ class Decoder(torch.nn.Module):
         self.dropout                = torch.nn.Dropout(dropout)
 
 
-    def forward(self, padded_targets, enc_output, enc_input_lengths):
+    def forward(self, padded_targets, enc_output, enc_input_lengths, target_lengths):
 
         # create a padding mask for the padded_targets with <PAD_TOKEN>
         ''' TODO '''
-        pad_mask = create_mask_1(padded_input=padded_targets, input_lengths=None, pad_idx=self.PAD_TOKEN)
-
+        
+        pad_mask = create_pad_mask_dec(padded_input=padded_targets, pad_idx=self.PAD_TOKEN).to(enc_output.device)
         # creating an attention mask for the future subsequences (look-ahead mask)
         ''' TODO '''
-        look_ahead_mask = create_mask_2(seq=padded_targets)
-
+        # look_ahead_mask = create_mask_2(seq=padded_targets)
+        look_ahead_mask = create_mask_2(seq=padded_targets, repeat=self.num_heads).to(enc_output.device)
         # creating attention mask to ignore padding positions in the input sequence during attention calculation
         ''' TODO '''
-        dec_enc_attn_mask = create_mask_3(padded_input=enc_output, input_lengths=enc_input_lengths, expand_length=padded_targets.size(1))
-
+        # dec_enc_attn_mask = create_mask_3(padded_input=enc_output,  expand_length=padded_targets.size(1), pad_idx=self.PAD_TOKEN)
+        
         # computing embeddings for the target sequence
         ''' TODO '''
         x = self.target_embedding(padded_targets)
 
-
+        pad_mask_enc = create_mask_1(enc_output, pad_idx=self.PAD_TOKEN)
         # computing Positional Encodings with the embedded targets and apply dropout
         ''' TODO '''
         x = self.positional_encoding(x)
@@ -135,9 +162,9 @@ class Decoder(torch.nn.Module):
             x, runnint_att['layer{}_dec_self'.format(i + 1)], runnint_att['layer{}_dec_self'.format(i + 1)] = self.dec_layers[i](padded_targets=x,
                                                                                enc_output=enc_output,
                                                                                enc_input_lengths=enc_input_lengths,
-                                                                               dec_enc_attn_mask=dec_enc_attn_mask,
+                                                                               pad_mask_enc=pad_mask_enc,
                                                                                pad_mask=pad_mask,
-                                                                               slf_attn_mask=look_ahead_mask)
+                                                                               slf_attn_mask=look_ahead_mask,)
 
         # linear layer (Final Projection) for next character prediction
         ''' TODO '''
@@ -165,13 +192,13 @@ class Decoder(torch.nn.Module):
             # preparing attention masks
             # filled with ones becaues we want to attend to all the elements in the sequence
             pad_mask = torch.ones_like(target_seq).float().unsqueeze(-1)  # (batch_size x i x 1)
-            slf_attn_mask_subseq = create_mask_2(target_seq)
-
+            slf_attn_mask_subseq = create_mask_2(target_seq,repeat=self.num_heads).to(enc_outputs.device)
+            pad_mask_enc = create_mask_1(enc_outputs,pad_idx=self.PAD_TOKEN).to(enc_outputs.device)
             x = self.positional_encoding(self.target_embedding(target_seq))
-
+            x  = x + self.dropout(x)
             for i in range(self.num_layers):
                 x, block1, block2 = self.dec_layers[i](
-                    x, enc_outputs, enc_input_lengths, None, pad_mask, slf_attn_mask_subseq)
+                    x, enc_outputs, enc_input_lengths, None, None, slf_attn_mask_subseq)
 
             seq_out = self.final_linear(x[:, -1])
             logits = torch.nn.functional.log_softmax(seq_out, dim=1)

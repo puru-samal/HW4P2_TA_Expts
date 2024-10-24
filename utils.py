@@ -6,6 +6,10 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
+
+
+
 def setup_logger(fname):
     logger = logging.getLogger(__name__)  # Custom logger for this module
     handler = logging.FileHandler(fname, mode='w')  # Log to file
@@ -158,6 +162,11 @@ def train_model(model, train_loader, loss_func, optimizer, scaler, pad_token, de
         with torch.autocast(device_type='cuda', dtype=torch.float16):
             # passing the minibatch through the model
             raw_predictions, attention_weights = model(inputs, inputs_lengths, targets_shifted, targets_lengths)
+            
+            
+
+
+          
 
             padding_mask = torch.logical_not(torch.eq(targets_shifted, pad_token))
 
@@ -165,7 +174,10 @@ def train_model(model, train_loader, loss_func, optimizer, scaler, pad_token, de
             loss = loss_func(raw_predictions.transpose(1,2), targets_golden)*padding_mask
             loss = loss.sum() / padding_mask.sum()
 
+           
         scaler.scale(loss).backward()   # This is a replacement for loss.backward()
+
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         scaler.step(optimizer)          # This is a replacement for optimizer.step()
         scaler.update()                 # This is something added just for FP16
 

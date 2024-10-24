@@ -7,14 +7,14 @@ train_partition: "train-clean-100"
 val_partition: "dev-clean"
 test_partition: "test-clean"
 NUM_WORKERS: 4
-subset: 0.25
+subset: 1
 norm: True
-token_type: "char" # [char, 1k, 10k, 20k, 50k, 100k]
+token_type: "char" # [char, 1k, 10k, 50k]
 input_dim: 80
 batch_size: 16
 
 ###### Encoder Parameters ------------------------------------------
-embed_type: "Conv1DMLP" # Available: ['Conv1DMLP', 'ResBlockMLP', 'BiLSTM' , 'Conv2DMLP']
+embed_type: "Conv1DMLP" # Available: ['Conv1DMLP', 'ResBlockMLP', 'BiLSTM']
 enc_dropout: 0.1
 enc_num_layers: 2
 enc_num_heads: 8
@@ -29,18 +29,18 @@ d_model: 512
 d_ff: 2048
 
 ###### Training Parameters ------------------------------------------------------
-learning_rate: 5E-4
+learning_rate: 0.002
 optimizer: "AdamW"
 momentum: 0.0
 nesterov: True
-scheduler: "CosineAnnealing"
+scheduler: "CosineAnnealing" # Available: ['CosineAnnealing', 'ReduceLR']
 factor: 0.2
 patience: 4
-epochs: 80
+epochs: 30
 calc_lev: true # Turn on Levenshtein distance calculation (SLOW!)
 
 ###### SpecAugment ---------------------------------------------------------------
-specaug: specaug
+specaug: false
 specaug_conf:
   apply_time_warp: true
   time_warp_window: 5

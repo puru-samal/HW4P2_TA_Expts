@@ -1,79 +1,70 @@
 import torch
-
-def create_mask_1(padded_input, input_lengths=None, pad_idx=None):
-    """ Create a mask to identify non-padding positions.
+import logging
+def create_mask_1(padded_input, pad_idx=1):
+    """ Create a mask to identify padding positions in the time dimension (T).
 
     Args:
-        padded_input: The input tensor with padding, shape (N, T, ...) or (N, T).
-        input_lengths: Optional, the actual lengths of each sequence before padding, shape (N,).
-        pad_idx: Optional, the index used for padding tokens.
+        padded_input: The input tensor with padding, shape (N, T).
+        pad_idx: The index used for padding tokens.
 
     Returns:
-        A mask tensor with shape (N, T, 1), where non-padding positions are marked with 1 and padding positions are marked with 0.
+        A mask tensor with shape (N, T), where padding positions are marked with 1 and non-padding positions are marked with 0.
     """
+    # Create a boolean mask where padding tokens are True (1) and non-padding tokens are False (0)
+    pad_mask =  (padded_input.sum(dim=-1) == pad_idx) # (N, T)
 
-    assert input_lengths is not None or pad_idx is not None
+    # Return the mask as boolean (1 for padding, 0 for non-padding)
+    return pad_mask
 
-    # Create a mask based on input_lengths
-    if input_lengths is not None:
-        N = padded_input.size(0)        # padded_input : (N x T x ...)
-        non_pad_mask = padded_input.new_ones(padded_input.size()[:-1])  # (N x T)
+def create_pad_mask_dec(padded_input, pad_idx=1):
+    """ Create a mask to identify padding positions in the time dimension (T).
 
-        # Set the mask to 0 for padding positions
-        for i in range(N):
-          non_pad_mask[i, input_lengths[i]:] = 0
+    Args:
+        padded_input: The input tensor with padding, shape (N, T).
+        pad_idx: The index used for padding tokens.
 
-    if pad_idx is not None:             # padded_input : N x T
+    Returns:
+        A mask tensor with shape (N, T), where padding positions are marked with 1 and non-padding positions are marked with 0.
+    """
+    # Create a boolean mask where padding tokens are True (1) and non-padding tokens are False (0)
+    pad_mask = (padded_input == pad_idx) # (N, T)
 
-        assert padded_input.dim() == 2
+    # Return the mask as boolean (1 for padding, 0 for non-padding)
+    return pad_mask
 
-        # Create a mask where non-padding positions are marked with 1 and padding positions are marked with 0
-        non_pad_mask = padded_input.ne(pad_idx).float()
-
-    return non_pad_mask.unsqueeze(-1)   # unsqueeze(-1) for broadcasting
-
-
-def create_mask_2(seq, pad_idx=None):
+def create_mask_2(seq, repeat, mask_type='binary'):
     """ Create a mask to prevent positions from attending to subsequent positions.
 
     Args:
         seq: The input sequence tensor, shape (batch_size, sequence_length).
+        repeat: The number of attention heads to repeat for.
+        mask_type: Type of mask, either 'binary' (True/False) or 'float' (-inf/0).
 
     Returns:
-        A mask tensor with shape (batch_size, sequence_length, sequence_length),
-            where positions are allowed to attend to previous positions but not to subsequent positions.
+        A mask tensor with shape (batch_size * num_heads, sequence_length, sequence_length),
+        where positions are allowed to attend to previous positions but not to subsequent positions.
+        If 'binary', True means no attention allowed. If 'float', -inf means no attention allowed.
     """
+    batch_size, seq_len = seq.size()
 
-    sz_b, len_s = seq.size()
+    # Create a lower triangular matrix with ones, ensuring causal masking
+    attn_shape = (seq_len, seq_len)
+    subsequent_mask = torch.tril(torch.ones(attn_shape))
 
-    # Create an upper triangular matrix with zeros on the diagonal and below (indicating allowed positions)
-    #   and ones above the diagonal (indicating disallowed positions)
-    subsequent_mask = torch.triu(
-        torch.ones((len_s, len_s), device=seq.device, dtype=torch.uint8), diagonal=1)
+    if mask_type == 'binary':
+        # Convert to a binary mask where True = cannot attend (future tokens), False = can attend
+        subsequent_mask = subsequent_mask == 0
+    elif mask_type == 'float':
+        # Convert to a float mask where -inf = cannot attend (future tokens), 0 = can attend
+        subsequent_mask = (1.0 - subsequent_mask) * float('-inf')
 
-    # Expand the mask to match the batch size, resulting in a mask for each sequence in the batch.
-    mask = subsequent_mask.unsqueeze(0).expand(sz_b, -1, -1)  # b x ls x ls
-
-
-    ''' Create a mask to ignore padding positions in the key sequence during attention calculation. '''
-
-    # Expanding to fit the shape of key query attention matrix.
-    if pad_idx != None:
-      len_q = seq.size(1)
-
-      # Create a mask where padding positions in the key sequence are marked with 1.
-      padding_mask  = seq.eq(pad_idx)
-
-      # Expand the mask to match the dimensions of the key-query attention matrix.
-      padding_mask  = padding_mask.unsqueeze(1).expand(-1, len_q, -1)  # b x lq x lk
-      mask          = (padding_mask + mask).gt(0)
-
-    else:
-      mask = mask.gt(0)
+    # Repeat the mask for batch size and heads, but collapse into (batch_size * num_heads)
+    mask = subsequent_mask.unsqueeze(0).repeat(batch_size * repeat, 1, 1)
+    # Shape: (batch_size * num_heads, seq_len, seq_len)
 
     return mask
 
-def create_mask_3(padded_input, input_lengths, expand_length):
+def create_mask_3(padded_input, expand_length, pad_idx=1):
     """ Create an attention mask to ignore padding positions in the input sequence during attention calculation.
 
     Args:
@@ -89,7 +80,7 @@ def create_mask_3(padded_input, input_lengths, expand_length):
 
     # Create a mask to identify non-padding positions, shape (N, Ti, 1)
     # (N x Ti x 1)
-    non_pad_mask    = create_mask_1(padded_input, input_lengths=input_lengths)
+    non_pad_mask    = create_mask_1(padded_input,pad_idx=pad_idx )
 
     # Invert the mask to identify padding positions, shape (N, Ti)
     # N x Ti, lt(1) like-not operation
@@ -100,3 +91,6 @@ def create_mask_3(padded_input, input_lengths, expand_length):
     attn_mask       = pad_mask.unsqueeze(1).expand(-1, expand_length, -1)
 
     return attn_mask
+
+
+
