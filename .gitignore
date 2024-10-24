@@ -3,3 +3,10 @@ checkpoints/
 out_text/
 attention_imgs/
 __pycache__/
+attention_imgs_ob1
+attention_imgs_ob2
+out_text_obj1
+out_text_obj2
+config*.yaml
+out_text/*
+attention_imgs/*

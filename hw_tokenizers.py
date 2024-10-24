@@ -56,15 +56,15 @@ class GTokenizer:
         self.token_type = token_type
         self.vocab, self.inv_vocab = None, None
         if token_type == '1k':
-            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_1k")
+            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_1k",force_download=True,use_fast=False)
         elif token_type == '10k':
-            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_10k")
+            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_10k",force_download=True,use_fast=False)
         elif token_type == '20k':
-            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_20k")
+            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_20k",force_download=True,use_fast=False)
         elif token_type == '50k':
-            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_50k")
+            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_50k",force_download=True,use_fast=False)
         elif token_type  == '100k':
-            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_100k")
+            self.tokenizer = AutoTokenizer.from_pretrained("alexgichamba/hw4_tokenizer_100k",force_download=True,use_fast=False)
         elif token_type == 'char':
             self.tokenizer = CharTokenizer()
 

@@ -221,8 +221,7 @@ if __name__ == "__main__":
 
         attention_weights_decoder_self       = attention_weights[attention_keys[0]][0].cpu().detach().numpy()
         attention_weights_decoder_cross      = attention_weights[attention_keys[-1]][0].cpu().detach().numpy()
-        attention_weights_decoder_cross = (attention_weights_decoder_cross - attention_weights_decoder_cross.min())
-        attention_weights_decoder_self = (attention_weights_decoder_self - attention_weights_decoder_self.min())
+       
         save_attention_plot(attention_weights_decoder_cross, epoch)
         save_attention_plot(attention_weights_decoder_self, epoch+100)
         if config["scheduler"] == "ReduceLR":

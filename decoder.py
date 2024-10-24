@@ -192,7 +192,8 @@ class Decoder(torch.nn.Module):
             # preparing attention masks
             # filled with ones becaues we want to attend to all the elements in the sequence
             pad_mask = torch.ones_like(target_seq).float().unsqueeze(-1)  # (batch_size x i x 1)
-            slf_attn_mask_subseq = create_mask_2(target_seq,repeat=self.num_heads).to(enc_outputs.device)
+            
+            slf_attn_mask_subseq = create_mask_2(target_seq,repeat=self.num_heads).to(enc_outputs.device) #To be used in LM
             pad_mask_enc = create_mask_1(enc_outputs,pad_idx=self.PAD_TOKEN).to(enc_outputs.device)
             x = self.positional_encoding(self.target_embedding(target_seq))
             x  = x + self.dropout(x)
